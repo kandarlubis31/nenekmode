@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/baachan_bg">
+
+    <TextView
+        android:id="@+id/wizTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selamat Datang! 👋"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="@color/baachan_primary_dark"
+        android:gravity="center"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/wizSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="@color/gray"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Langkah 1: Nama -->
+            <LinearLayout
+                android:id="@+id/wizStep1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_background"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nama panggilan lansia"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_blue"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizNenekName"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="text"
+                    android:hint="Contoh: Bu, Ibu Siti, Nenek"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nama asisten"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_blue"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizAssistantName"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="text"
+                    android:hint="Contoh: Kandar, Riza"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light" />
+            </LinearLayout>
+
+            <!-- Langkah 2: Darurat -->
+            <LinearLayout
+                android:id="@+id/wizStep2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_background"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nomor telepon darurat"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="#D32F2F"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizEmergencyPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="phone"
+                    android:hint="Contoh: 081234567890"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Kontak favorit (anak/cucu)"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/dark_blue"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizContactName"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="text"
+                    android:hint="Nama, contoh: Anak"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizContactPhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="phone"
+                    android:hint="Nomor, contoh: 081234567890"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light" />
+            </LinearLayout>
+
+            <!-- Langkah 3: Obat -->
+            <LinearLayout
+                android:id="@+id/wizStep3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_background"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <Switch
+                    android:id="@+id/wizMedSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Aktifkan pengingat minum obat"
+                    android:textSize="17sp"
+                    android:layout_marginBottom="10dp" />
+
+                <EditText
+                    android:id="@+id/wizMed1"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="time"
+                    android:hint="Jadwal 1, contoh: 08:00"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizMed2"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="time"
+                    android:hint="Jadwal 2 (opsional), contoh: 14:00"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light"
+                    android:layout_marginBottom="6dp" />
+
+                <EditText
+                    android:id="@+id/wizMed3"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="time"
+                    android:hint="Jadwal 3 (opsional), contoh: 20:00"
+                    android:textSize="18sp"
+                    android:padding="12dp"
+                    android:background="@drawable/rounded_background_light" />
+            </LinearLayout>
+
+            <!-- Langkah 4: Selesai -->
+            <LinearLayout
+                android:id="@+id/wizStep4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_background"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/wizSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="17sp"
+                    android:textColor="@color/baachan_primary_dark"
+                    android:lineSpacingExtra="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/wizBack"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="Kembali"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/wizNext"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="2"
+            android:text="Lanjut"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/baachan_primary"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+</LinearLayout>

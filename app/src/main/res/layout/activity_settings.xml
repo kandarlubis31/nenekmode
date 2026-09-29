@@ -1,0 +1,890 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@color/white">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Pengaturan"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/dark_blue"
+        android:layout_marginBottom="12dp"
+        android:gravity="center" />
+
+    <!-- Tab kategori: Umum (keluarga) vs Teknis (opsional) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
+
+        <Button
+            android:id="@+id/tabUmum"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:text="Umum"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/baachan_primary"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/tabTeknis"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_weight="1"
+            android:text="Mode Teman \u0026 AI"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/gray"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ================= TAB UMUM ================= -->
+            <LinearLayout
+                android:id="@+id/catUmum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nama Nenek (atau istilah panggilan)"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/nenekNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="text"
+                        android:hint="Contoh: Bu, Ibu Siti, Nenek"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ini akan dipanggil oleh asisten saat berbicara"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nama Asisten"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/assistantNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="text"
+                        android:hint="Contoh: Kandar, Riza, Asisten"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nama asisten yang menemani nenek"
+                        android:textSize="12sp"
+                        android:textColor="@color/gray"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nomor Telepon Darurat"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/emergencyNumberInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="phone"
+                        android:hint="Contoh: 081234567890"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="PENTING: Nomor yang akan dihubungi saat ada keadaan darurat."
+                        android:textSize="12sp"
+                        android:textColor="#D32F2F"
+                        android:layout_marginTop="8dp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Kontak Favorit (Anak/Cucu)"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nama Kontak"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/favoriteContactNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="text"
+                        android:hint="Contoh: Anak, Cucu, Ibu"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nomor Telepon"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp"
+                        android:layout_marginTop="8dp" />
+
+                    <EditText
+                        android:id="@+id/favoriteContactNumberInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="phone"
+                        android:hint="Contoh: 081234567890"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Bilang 'Telpon anak' atau 'Nelpon cucu' untuk langsung menelpon."
+                        android:textSize="12sp"
+                        android:textColor="@color/gray"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aksesibilitas"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ukuran Font"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <Spinner
+                        android:id="@+id/fontSizeSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mode Kontras Tinggi"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <Switch
+                        android:id="@+id/highContrastSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aktifkan kontras tinggi"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pengingat Obat"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Jadwal minum obat (maks 3 waktu per hari)"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp"
+                        android:gravity="center_vertical">
+
+                        <EditText
+                            android:id="@+id/medHour1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Jam"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray" />
+
+                        <EditText
+                            android:id="@+id/medMin1"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Menit"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray"
+                            android:layout_marginStart="4dp" />
+
+                        <Switch
+                            android:id="@+id/medSwitch1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp"
+                        android:gravity="center_vertical">
+
+                        <EditText
+                            android:id="@+id/medHour2"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Jam"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray" />
+
+                        <EditText
+                            android:id="@+id/medMin2"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Menit"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray"
+                            android:layout_marginStart="4dp" />
+
+                        <Switch
+                            android:id="@+id/medSwitch2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <EditText
+                            android:id="@+id/medHour3"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Jam"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray" />
+
+                        <EditText
+                            android:id="@+id/medMin3"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Menit"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray"
+                            android:layout_marginStart="4dp" />
+
+                        <Switch
+                            android:id="@+id/medSwitch3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pesan pengingat"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/reminderMessageInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:hint="Waktu minum obat ya!"
+                        android:textSize="16sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray"
+                        android:minHeight="48dp" />
+
+                    <Switch
+                        android:id="@+id/reminderSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aktifkan pengingat"
+                        android:textSize="16sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Cek Harian"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Waktu cek harian"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <EditText
+                            android:id="@+id/checkInHourInput"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Jam (0-23)"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray" />
+
+                        <EditText
+                            android:id="@+id/checkInMinInput"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Menit (0-59)"
+                            android:textSize="16sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/checkInSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aktifkan cek harian"
+                        android:textSize="16sp" />
+
+                    <Switch
+                        android:id="@+id/escalationSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="SMS keluarga bila tak ada respons 30 menit"
+                        android:textSize="16sp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Backup \u0026 Restore"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Simpan semua pengaturan \u0026 memori ke file saat ganti HP, lalu pulihkan di HP baru."
+                        android:textSize="13sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/backupButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Backup ke File"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/restoreButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Restore dari File"
+                            android:textSize="14sp"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ================= TAB TEKNIS ================= -->
+            <LinearLayout
+                android:id="@+id/catTeknis"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mode Teman"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/keepAliveSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Dengar terus walau layar mati"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Switch
+                        android:id="@+id/proactiveSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sapaan proaktif (nyapa duluan)"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Switch
+                        android:id="@+id/wakeSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Harus panggil nama asisten dulu"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Switch
+                        android:id="@+id/newsSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Berita pagi"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Switch
+                        android:id="@+id/adzanSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pengingat adzan 5 waktu"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="AI \u0026 Kunci API (BYOK)"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/byokSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pakai API key sendiri (BYOK)"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/byokKeyInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="text"
+                        android:hint="Tempel API key Groq (gsk_...)"
+                        android:textSize="14sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ambil gratis di console.groq.com/keys. Kalau kosong, dipakai kunci bawaan aplikasi."
+                        android:textSize="12sp"
+                        android:textColor="@color/gray"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Model AI"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="4dp" />
+
+                    <Spinner
+                        android:id="@+id/modelSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <Button
+                        android:id="@+id/testKeyButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="Tes Koneksi AI"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Panggilan Offline (Wake Word)"
+                        android:textSize="16sp"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="4dp" />
+
+                    <Switch
+                        android:id="@+id/voskSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Harus dipanggil namanya dulu (offline)"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/voskUrlInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="textUri"
+                        android:hint="URL model Vosk (.zip, Bahasa Indonesia)"
+                        android:textSize="14sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray"
+                        android:layout_marginBottom="8dp" />
+
+                    <Button
+                        android:id="@+id/downloadModelButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="Unduh Model Suara Offline"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Fitur Tambahan (Opsional)"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/dark_blue"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/waterSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pengingat minum air"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/waterIntervalInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="number"
+                        android:hint="Interval menit (contoh: 120 = tiap 2 jam)"
+                        android:textSize="14sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/storiesSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Cerita \u0026 nasihat ('ceritain dongeng')"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/weatherAlertSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Peringatan hujan tiap pagi"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/bpSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Catat tekanan darah lewat suara"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/birthdaySwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sapaan ulang tahun / hari spesial"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <EditText
+                        android:id="@+id/birthdayDateInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:inputType="text"
+                        android:hint="Tanggal, contoh: 17-08 (bisa beberapa, pisah koma)"
+                        android:textSize="14sp"
+                        android:padding="12dp"
+                        android:background="@drawable/rounded_background_light"
+                        android:textColorHint="@color/gray"
+                        android:layout_marginBottom="12dp" />
+
+                    <Switch
+                        android:id="@+id/nightModeSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mode malam (jangan ganggu saat tidur)"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="4dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/nightStartInput"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Mulai (jam, contoh 21)"
+                            android:textSize="14sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray" />
+
+                        <EditText
+                            android:id="@+id/nightEndInput"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:inputType="number"
+                            android:hint="Selesai (jam, contoh 5)"
+                            android:textSize="14sp"
+                            android:padding="12dp"
+                            android:background="@drawable/rounded_background_light"
+                            android:textColorHint="@color/gray"
+                            android:layout_marginStart="4dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Simpan Pengaturan"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:background="@drawable/button_emergency"
+        android:elevation="4dp" />
+
+</LinearLayout>

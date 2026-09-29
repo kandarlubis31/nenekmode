@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="baachan_primary">#639E96</color>
+    <color name="baachan_primary_dark">#2E655C</color>
+    <color name="baachan_accent">#F2CA5B</color>
+    <color name="baachan_emergency">#DF5439</color>
+    <color name="baachan_bg">#F4F9F8</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="dark_blue">#2E655C</color>
+    <color name="gray">#757575</color>
+    <color name="blue">#639E96</color>
+    <color name="hc_bg">#000000</color>
+    <color name="hc_text">#FFFFFF</color>
+    <color name="hc_primary">#00E676</color>
+    <color name="hc_emergency">#FF1744</color>
+    <color name="hc_accent">#FFD740</color>
+</resources>
