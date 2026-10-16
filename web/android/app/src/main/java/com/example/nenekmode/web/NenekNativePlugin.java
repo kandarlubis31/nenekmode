@@ -146,8 +146,17 @@ public class NenekNativePlugin extends Plugin {
 
     @PluginMethod
     public void isSpeaking(PluginCall call) {
+        boolean speaking = tts != null && tts.isSpeaking();
+        if (!speaking) {
+            // TTS receiver native (SpeechUtil) punya instance terpisah —
+            // cek juga penanda waktu yang mereka tulis di prefs
+            long until = getContext()
+                    .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .getLong("tts_busy_until", 0L);
+            speaking = System.currentTimeMillis() < until;
+        }
         JSObject r = new JSObject();
-        r.put("speaking", tts != null && tts.isSpeaking());
+        r.put("speaking", speaking);
         call.resolve(r);
     }
 

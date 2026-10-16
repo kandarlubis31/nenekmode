@@ -85,25 +85,33 @@ export async function speak(opts: SpeakOptions): Promise<void> {
     await safe(() => n.speak(opts), undefined as unknown as void);
     return;
   }
-  // fallback browser: speechSynthesis
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(opts.text);
-    u.lang = "id-ID";
-    u.pitch = opts.pitch ?? 0.85;
-    u.rate = opts.rate ?? 0.75;
-    u.volume = opts.volume ?? 1;
-    browserSpeaking = true;
-    u.onend = () => {
+  // fallback browser: speechSynthesis — resolve saat TTS benar-benar selesai,
+  // biar caller (voice loop) tidak membuka mic sambil asisten masih bersuara
+  return await new Promise<void>((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
       browserSpeaking = false;
+      resolve();
     };
-    u.onerror = () => {
-      browserSpeaking = false;
-    };
-    window.speechSynthesis.speak(u);
-  } catch {
-    browserSpeaking = false;
-  }
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(opts.text);
+      u.lang = "id-ID";
+      u.pitch = opts.pitch ?? 0.85;
+      u.rate = opts.rate ?? 0.75;
+      u.volume = opts.volume ?? 1;
+      browserSpeaking = true;
+      u.onend = finish;
+      u.onerror = finish;
+      window.speechSynthesis.speak(u);
+      // jaring pengaman: sebagian engine tidak memanggil onend
+      window.setTimeout(finish, Math.max(5000, opts.text.length * 150));
+    } catch {
+      finish();
+    }
+  });
 }
 
 export async function stopSpeaking(): Promise<void> {

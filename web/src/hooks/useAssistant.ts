@@ -32,6 +32,7 @@ import {
 } from "../lib/actions";
 import * as bridge from "../native/bridge";
 import { recordWithVad, encodeWav, SAMPLE_RATE } from "../lib/recorder";
+import { looksLikeEcho, normalizeSpeech } from "../lib/echoGuard";
 import { cancelEscalation } from "../lib/escalation";
 import { handleAlarmEvent, type ReceiverUI } from "../lib/receivers";
 
@@ -88,6 +89,9 @@ export function useAssistant() {
   const listeningRef = useRef(false);
   const stopFlagRef = useRef(false);
   const lastInputRef = useRef<{ raw: string; at: number }>({ raw: "", at: 0 });
+  // transkrip mic terakhir — untuk jeda 30 dtk antar-ucapan identik dari mic
+  // (Whisper mengulang hasil palsu utk audio nyaris senyap / gema beruntun)
+  const lastMicInputRef = useRef<{ raw: string; at: number }>({ raw: "", at: 0 });
 
   if (!matcherRef.current) matcherRef.current = new IntentMatcher();
 
@@ -590,6 +594,28 @@ export function useAssistant() {
       updateStatus("Mode Teman sedang aktif - asisten dengar terus");
       return;
     }
+    // Jangan rekam selama TTS masih bersuara (termasuk TTS receiver native
+    // seperti sapaan proaktif/reminder): kalau tidak, mic menangkap gema
+    // asisten sendiri -> Whisper mentranskrip -> asisten "menjawab dirinya sendiri".
+    const ttsDeadline = Date.now() + 10000;
+    while (Date.now() < ttsDeadline) {
+      if (stopFlagRef.current) {
+        stopFlagRef.current = false;
+        unlock();
+        updateStatus("Siap");
+        return;
+      }
+      if (!(await bridge.ttsIsSpeaking())) break;
+      await new Promise((r) => window.setTimeout(r, 200));
+    }
+    // jeda tenang biar ekor audio / gema loudspeaker meredam dulu
+    await new Promise((r) => window.setTimeout(r, 700));
+    if (stopFlagRef.current) {
+      stopFlagRef.current = false;
+      unlock();
+      updateStatus("Siap");
+      return;
+    }
     setListening(true);
     updateStatus("Mendengarkan...");
     try {
@@ -616,8 +642,29 @@ export function useAssistant() {
           listeningRef.current = false;
           setListening(false);
           updateStatus("Siap");
-          if (text && text.trim()) processInput(text);
-          else scheduleListening(300);
+          const t = (text ?? "").trim();
+          if (!t) {
+            scheduleListening(300);
+            return;
+          }
+          // gerbang 1: transkrip ternyata gema ucapan asisten sendiri
+          if (looksLikeEcho(t, lastSpokenRef.current)) {
+            scheduleListening(300);
+            return;
+          }
+          // gerbang 2: mic menghasilkan teks identik lagi <30 dtk — hampir
+          // pasti gema/halusinasi beruntun, bukan user mengulang sungguhan
+          const nrm = normalizeSpeech(t);
+          const now = Date.now();
+          if (
+            lastMicInputRef.current.raw === nrm &&
+            now - lastMicInputRef.current.at < 30000
+          ) {
+            scheduleListening(300);
+            return;
+          }
+          lastMicInputRef.current = { raw: nrm, at: now };
+          processInput(t);
         },
         onError: () => {
           listeningRef.current = false;

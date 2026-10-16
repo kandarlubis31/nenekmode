@@ -8,6 +8,13 @@ export const VAD_THRESHOLD = 2.0; // skala int16, sama dgn AudioUtil
 export const VAD_SILENCE_MS = 1500;
 export const VAD_SPEECH_MIN_MS = 400;
 export const MAX_RECORDING_MS = 15000;
+/**
+ * Rerata RMS minimum selama "bicara" (skala int16). Noise senyap / gema TTS
+ * lolos VAD_THRESHOLD (2.0) tapi di bawah ini — Whisper sering meng-hallucinate
+ * "terima kasih" pada audio hampir senyap, bikin asisten "jawab sendiri".
+ * bicara asli dekat HP: RMS ~300-3000; 20 tetap sangat murah hati utk suara pelan.
+ */
+export const MIN_SPEECH_RMS = 20.0;
 
 export type StopFlag = () => boolean;
 
@@ -34,6 +41,8 @@ export async function recordWithVad(stopFlag: StopFlag): Promise<Uint8Array | nu
   let speechStartTime = 0;
   let silenceStartTime = 0;
   let speechDetected = false;
+  let rmsSum = 0;
+  let rmsCount = 0;
   const startTime = Date.now();
   let finished = false;
 
@@ -41,6 +50,12 @@ export async function recordWithVad(stopFlag: StopFlag): Promise<Uint8Array | nu
     const finish = (result: Uint8Array | null) => {
       if (finished) return;
       finished = true;
+      // gerbang anti-halusinasi: audio dengan energi rerata rendah
+      // (noise senyap / gema TTS pelan) jangan dikirim ke Whisper —
+      // di situ Whisper sering mengarang "terima kasih"/"halo"
+      if (result && rmsCount > 0 && rmsSum / rmsCount < MIN_SPEECH_RMS) {
+        result = null;
+      }
       try {
         processor.onaudioprocess = null;
         source.disconnect();
@@ -76,6 +91,8 @@ export async function recordWithVad(stopFlag: StopFlag): Promise<Uint8Array | nu
         sum += s * s;
       }
       const rms = Math.sqrt(sum / input.length);
+      rmsSum += rms;
+      rmsCount++;
 
       if (rms > VAD_THRESHOLD) {
         if (!speechDetected) {
