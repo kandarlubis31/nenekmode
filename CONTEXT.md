@@ -43,6 +43,10 @@ app/
       values/
         colors.xml              - Termasuk high contrast colors (hc_*)
   CONTEXT.md
+web/                      - Port React+Vite+Capacitor (app berdampingan, lihat bawah)
+  src/                    - Frontend React (screens, lib port logika native, native bridge)
+  android/                - Proyek Capacitor Android (JDK 21, mesin Java asli di-copy utuh)
+  scripts/                - smoke.mjs (puppeteer), probe-groq.mjs, debug-chat.mjs
 gradle/
 res/
 .env (API keys)
@@ -187,6 +191,15 @@ File baru: `BackupUtil, GreetingBank, WatchdogReceiver, BoardActivity (+ res/lay
 - **Setup wizard 4 langkah** — `SetupWizardActivity` + `activity_setup_wizard.xml`: (1) nama lansia+asisten, (2) nomor darurat+kontak favorit, (3) jadwal obat (input `HH:mm`, bisa dilewati), (4) ringkasan+selesai. Menggantikan tutorial teks; dipicu saat `is_first_time`; langsung simpan prefs + `ReminderReceiver.setReminders`.
 - **Settings tab kategori** — 2 tab: **Umum** (nama, darurat, kontak, aksesibilitas, obat, cek harian, backup) & **Mode Teman & AI** (mode teman, BYOK, Vosk, fitur opsional, mode malam). Semua ID widget lama dipertahankan — `SettingsActivity` tinggal wiring tab (`selectTab`).
 - File baru UI: `SetupWizardActivity (+ activity_setup_wizard.xml, bg_status_pill, bg_bubble_user, bg_bubble_assistant)`
+
+## Port Web — React + Vite + Capacitor (2026-10-16)
+App kedua, **install berdampingan** app Java asli (`applicationId com.example.nenekmode.web`). Tujuan: UI modern + bisa di-dev/browser, tapi mesin native (alarm, Mode Teman, SMS darurat) tetap pakai kode Java asli.
+- **Frontend** (`web/src`): React 19 + TypeScript + Vite. Layar: `WizardScreen` (setup 4 langkah), `MainScreen` (bubble chat + status pill), `SettingsScreen` (2 tab), `BoardScreen` (papan info). Orkestrator: `hooks/useAssistant` — alur identik MainActivity+CompanionService (quick commands → matcher lokal → LLM → marker output), voice loop VAD→WAV→Whisper via `lib/recorder`. Logika native di-port ke TS di `lib/` (intents, conversation, memory, prayer, news, weather, bp, escalation, scheduling, receivers untuk fallback browser).
+- **Bridge** (`web/src/native/bridge.ts`): plugin Capacitor `NenekNative` — TTS, alarm exact, SMS, telpon, SIM, Mode Teman, battery, geo. Di browser semua fallback aman (speechSynthesis, setTimeout, Notification API) — dev tetap jalan tanpa HP.
+- **Native side** (`web/android`): Gradle 8.14.3 + compileSdk 36 + **JDK 21** (Capacitor 8 wajib JDK 21; JDK 17 di app lama tetap untuk build app lama). Semua receiver/service Java asli di-copy utuh (`com.example.nenekmode.*`) + `NenekNativePlugin` (19 method) + `MainActivity` (BridgeActivity).
+- **Sinkron prefs** (`web/src/native/sync.ts`): localStorage = sumber kebenaran settings (push ke SharedPreferences debounce 400ms); native = sumber kebenaran state runtime (`NATIVE_OWNED`: med_confirm_waiting, escalation_armed, med_streak, dst) — di-pull + merge pas app ke foreground. `chat_history` digabung per-baris.
+- **Dev**: `npm run dev` (browser), `npm run build` (tsc+vite, lolos), `npx cap sync android`, smoke test `node scripts/smoke.mjs` (puppeteer-core + Chrome sistem, preview :4173, 6 screenshot di `web/smoke/`), debug Groq `scripts/probe-groq.mjs` / `debug-chat.mjs`. API key: `web/.env` (`VITE_GROQ_API_KEY`, jangan commit).
+- Status: web build BUILD SUCCESSFUL; APK Capacitor build belum tentu lolos (cek `web/android/app/build/outputs/apk/debug/`). Belum ditest di HP asli.
 
 ## Catatan Penting
 - `.env` berisi dua API key (Groq) — jangan commit
