@@ -199,7 +199,7 @@ App kedua, **install berdampingan** app Java asli (`applicationId com.example.ne
 - **Native side** (`web/android`): Gradle 8.14.3 + compileSdk 36 + **JDK 21** (Capacitor 8 wajib JDK 21; JDK 17 di app lama tetap untuk build app lama). Semua receiver/service Java asli di-copy utuh (`com.example.nenekmode.*`) + `NenekNativePlugin` (19 method) + `MainActivity` (BridgeActivity).
 - **Sinkron prefs** (`web/src/native/sync.ts`): localStorage = sumber kebenaran settings (push ke SharedPreferences debounce 400ms); native = sumber kebenaran state runtime (`NATIVE_OWNED`: med_confirm_waiting, escalation_armed, med_streak, dst) — di-pull + merge pas app ke foreground. `chat_history` digabung per-baris.
 - **Dev**: `npm run dev` (browser), `npm run build` (tsc+vite, lolos), `npx cap sync android`, smoke test `node scripts/smoke.mjs` (puppeteer-core + Chrome sistem, preview :4173, 6 screenshot di `web/smoke/`), debug Groq `scripts/probe-groq.mjs` / `debug-chat.mjs`. API key: `web/.env` (`VITE_GROQ_API_KEY`, jangan commit).
-- Status: web build BUILD SUCCESSFUL; APK Capacitor build belum tentu lolos (cek `web/android/app/build/outputs/apk/debug/`). Belum ditest di HP asli.
+- Status (2026-10-16): web build lolos (`npm run build`) **dan** APK Capacitor BUILD SUCCESSFUL — `web/android/app/build/outputs/apk/debug/app-debug.apk` (~44MB). Build APK butuh **JDK 21** (jangan JAVA_HOME jdk-17). Fix penting saat build: dependensi okhttp/play-services-location/jna-pin, `CapacitorActivity` sudah tidak ada di Capacitor 8 (pakai `MainActivity` web), `getDouble` return `Double`. Belum ditest di HP asli.
 
 ## Catatan Penting
 - `.env` berisi dua API key (Groq) — jangan commit
