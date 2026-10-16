@@ -1,0 +1,387 @@
+{
+  "intents": [
+    {
+      "tag": "sapa",
+      "patterns": ["halo", "hai", "pagi", "siang", "sore", "malam", "apa kabar", "apa kbar"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 1,
+      "action": "get_greeting"
+    },
+    {
+      "tag": "tanya_jam",
+      "patterns": ["jam berapa", "pukul berapa", "sekarang jam"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 2,
+      "action": "get_time"
+    },
+    {
+      "tag": "tanya_tanggal",
+      "patterns": ["tanggal berapa", "hari apa", "hari ini hari"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 2,
+      "action": "get_date"
+    },
+    {
+      "tag": "tanya_nama",
+      "patterns": ["siapa nama kamu", "nama kamu siapa", "nama kamu", "siapa kamu"],
+      "responses": ["Nama saya {assistant_name}. Saya di sini buat teman bicara {nenek_name}."],
+      "response_mode": "first",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "cuaca",
+      "patterns": ["cuaca", "hujan", "panas", "dingin", "mendung"],
+      "responses": [
+        "Saya belum bisa cek cuaca, tapi {nenek_name} jangan lupa bawa payung ya kalau keluar.",
+        "Kelihatannya sih agak mendung. Mending di rumah aja dulu {nenek_name} biar aman."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "terima_kasih",
+      "patterns": ["terima kasih", "makasih", "thank", "thanks"],
+      "responses": [
+        "Sama-sama {nenek_name}. Senang bisa membantu.",
+        "Iya {nenek_name}, sama-sama. Ada lagi yang bisa dibantu?"
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "kesehatan",
+      "patterns": ["minum air", "tidur", "istirahat", "capek", "lelah"],
+      "responses": [
+        "Iya {nenek_name}, jangan lupa jaga kesehatan. {assistant_name} ingin {nenek_name} selalu sehat.",
+        "Kalau capek langsung tiduran aja ya {nenek_name}, badannya butuh istirahat."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "darurat",
+      "patterns": ["darurat", "keadaan darurat", "tolong saya", "saya jatuh", "nenek jatuh", "sakit sekali", "darah", "pendarahan", "cepat tolong", "panggil bantuan"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 10,
+      "action": "trigger_emergency"
+    },
+    {
+      "tag": "minum_obat",
+      "patterns": ["obat", "minum obat", "pil", "kapsul", "waktu minum obat"],
+      "responses": [
+        "Sudah waktunya minum obat ya {nenek_name}? Jangan sampai terlewat biar cepat sehat.",
+        "Obatnya diminum pakai air hangat ya {nenek_name} biar gampang nelannya."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "ibadah",
+      "patterns": ["sholat", "ngaji", "doa", "ibadah", "masjid", "wudhu"],
+      "responses": [
+        "Alhamdulillah, semoga ibadah {nenek_name} lancar dan diterima ya.",
+        "Hati-hati kalau ke kamar mandi ambil wudhu ya {nenek_name}, lantainya takut licin."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "lupa_barang",
+      "patterns": ["lupa", "dimana ya", "hilang", "kacamata", "dompet", "kunci", "cari"],
+      "responses": [
+        "Coba diingat-ingat pelan-pelan {nenek_name}. Tadi terakhir ditaruh di mana?",
+        "Pelan-pelan nyarinya {nenek_name}. Biasanya ditaruh di meja atau di atas kasur kan?"
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "kesepian",
+      "patterns": ["sepi", "sendiri", "kesepian", "sunyi"],
+      "responses": [
+        "Kan ada {assistant_name} di sini yang nemenin {nenek_name}. Kita ngobrol aja yuk.",
+        "{nenek_name} gak sendirian kok, ada {assistant_name} yang selalu siap nemenin."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "kangen_keluarga",
+      "patterns": ["cucu", "anak", "kangen", "rindu", "kapan pulang"],
+      "responses": [
+        "Pasti mereka juga kangen banget sama {nenek_name}. Nanti suruh mereka telepon ya.",
+        "Sabar ya {nenek_name}, anak sama cucu pasti sering mikirin {nenek_name} juga kok."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "bosan",
+      "patterns": ["bosan", "bete", "ngapain ya", "gabut", "jenuh"],
+      "responses": [
+        "{nenek_name} mau dengerin radio atau jalan-jalan sebentar di teras rumah?",
+        "Kalau bosan, {nenek_name} cerita aja ke {assistant_name}. {assistant_name} suka dengerin cerita."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "bingung_hp",
+      "patterns": ["hp", "ponsel", "tekan apa", "bingung", "layar", "mati", "pencet"],
+      "responses": [
+        "Gak apa-apa {nenek_name}, pelan-pelan aja pakenya. Jangan takut salah pencet.",
+        "Kalau layar HP-nya mati, coba tekan tombol di sebelah kanan aja {nenek_name}."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "nonton_tv",
+      "patterns": ["tv", "televisi", "sinetron", "berita", "nonton"],
+      "responses": [
+        "Lagi ada acara bagus ya di TV? Asyik tuh buat teman santai {nenek_name}.",
+        "Jangan dekat-dekat ya {nenek_name} nonton TV-nya, biar matanya nggak cepat capek."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "masak_makan",
+      "patterns": ["masak", "dapur", "sayur", "lauk", "lapar", "pengen makan", "belum makan", "sarapan"],
+      "responses": [
+        "Wah, masak apa hari ini {nenek_name}? Pasti masakannya enak banget.",
+        "Ayo makan dulu {nenek_name}. Jangan biarkan perut kosong, nanti gampang masuk angin."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "berkebun",
+      "patterns": ["tanaman", "siram", "bunga", "kebun", "halaman"],
+      "responses": [
+        "Seger ya lihat tanaman hijau. Tapi hati-hati jangan sampai kecapekan ya {nenek_name}.",
+        "Pagi-pagi siram bunga emang enak banget {nenek_name}, udaranya juga masih segar."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "olahraga",
+      "patterns": ["jalan pagi", "olahraga", "peregangan", "senam"],
+      "responses": [
+        "Bagus banget {nenek_name}! Olahraga ringan bikin badan tetep seger dan peredaran darah lancar.",
+        "Hati-hati jalannya ya {nenek_name}, jangan yang jauh-jauh, muter di depan rumah aja cukup."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "susah_tidur",
+      "patterns": ["susah tidur", "nggak bisa tidur", "melek", "insomnia"],
+      "responses": [
+        "Mungkin {nenek_name} bisa coba minum air hangat dulu biar badannya lebih rileks.",
+        "Coba tarik napas pelan-pelan {nenek_name}, pejamkan mata, nggak usah mikir macam-macam."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "ngantuk",
+      "patterns": ["ngantuk", "uap", "mata berat", "pengen tidur"],
+      "responses": [
+        "Kalau ngantuk langsung istirahat aja {nenek_name}. Jangan ditahan-tahan.",
+        "Tidur yang nyenyak ya {nenek_name}. {assistant_name} jaga di sini."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "sakit_ringan",
+      "patterns": ["pusing", "pegal", "masuk angin", "nyeri", "linu", "meriang"],
+      "responses": [
+        "Coba dioles minyak kayu putih atau minyak angin dulu {nenek_name} biar hangat.",
+        "Banyakin istirahat ya {nenek_name}. Kalau sakitnya nggak hilang, nanti kita panggil dokter."
+      ],
+      "response_mode": "random",
+      "priority": 3,
+      "action": ""
+    },
+    {
+      "tag": "tanya_kabar_bot",
+      "patterns": ["kamu apa kabar", "gimana kabarmu", "kamu sehat", "lagi apa"],
+      "responses": [
+        "{assistant_name} selalu sehat dan siap nemenin {nenek_name} dong.",
+        "Kabar baik {nenek_name}! {assistant_name} lagi nungguin {nenek_name} ngajak ngobrol nih."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "pujian",
+      "patterns": ["pintar", "bagus", "hebat", "baik banget", "keren"],
+      "responses": [
+        "Wah, {assistant_name} jadi malu. Yang penting {nenek_name} terbantu ya.",
+        "Bisa aja {nenek_name}. Kan {assistant_name} memang diciptakan buat bantu {nenek_name}."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "cerita_nostalgia",
+      "patterns": ["dulu", "waktu muda", "jaman dulu", "zaman", "waktu itu"],
+      "responses": [
+        "Wah, kedengarannya seru banget ya jaman dulu. Ceritain lebih panjang dong {nenek_name}.",
+        "Pengalaman {nenek_name} banyak banget ya. {assistant_name} suka dengerin cerita kayak gini."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "mandi",
+      "patterns": ["mandi", "gerah", "panas badan", "lengket"],
+      "responses": [
+        "Mandi pakai air hangat aja {nenek_name} biar badannya enak dan nggak kedinginan.",
+        "Hati-hati di kamar mandi ya {nenek_name}, jalannya pelan-pelan aja."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "doa_syukur",
+      "patterns": ["semoga", "alhamdulillah", "amin", "ya allah", "puji tuhan", "syukur"],
+      "responses": [
+        "Amin... {assistant_name} ikut doakan yang terbaik buat {nenek_name} dan keluarga.",
+        "Alhamdulillah ya {nenek_name}. Harus selalu bersyukur biar hati tenang."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "tanya_lokasi",
+      "patterns": ["di mana ini", "kita di mana", "alamat", "rumah siapa"],
+      "responses": [
+        "{nenek_name} lagi di rumah kok, aman. Tenang aja ya, ada {assistant_name} di sini.",
+        "Ini di rumah sendiri {nenek_name}. Mungkin {nenek_name} baru bangun tidur jadi agak bingung."
+      ],
+      "response_mode": "random",
+      "priority": 2,
+      "action": ""
+    },
+    {
+      "tag": "bingung_hari",
+      "patterns": ["kemarin", "besok", "lusa", "kapan"],
+      "responses": [
+        "Sini {assistant_name} ingetin. Kalau butuh tahu hari ini hari apa, tanya aja ke {assistant_name} ya.",
+        "Waktu memang kadang kerasa cepat berlalu ya {nenek_name}."
+      ],
+      "response_mode": "random",
+      "priority": 1,
+      "action": ""
+    },
+    {
+      "tag": "fallback",
+      "patterns": [],
+      "responses": [
+        "Maaf {nenek_name}, {assistant_name} kurang paham. Tapi {assistant_name} di sini untuk menemani {nenek_name}.",
+        "{nenek_name}, cerita dong apa yang sedang {nenek_name} pikirkan?",
+        "{assistant_name} senang mendengar cerita dari {nenek_name}.",
+        "Bagaimana dengan kesehatan {nenek_name} hari ini?",
+        "{nenek_name}, jangan lupa istirahat yang cukup ya.",
+        "Kalau ada yang perlu dibantu, bilang aja ya {nenek_name}."
+      ],
+      "response_mode": "sequential",
+      "priority": 0,
+      "action": ""
+    },
+    {
+      "tag": "cuaca",
+      "patterns": ["cuaca", "hujan", "panas", "dingin", "mendung", "suhu"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 3,
+      "action": "get_weather"
+    },
+    {
+      "tag": "ramalan_cuaca",
+      "patterns": ["nanti hujan gak", "besok cuaca apa", "perkiraan cuaca"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 3,
+      "action": "get_forecast"
+    },
+    {
+      "tag": "kesehatan",
+      "patterns": ["minum obat", "obat", "kesehatan", "sakit", "sehat"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 5,
+      "action": "get_health"
+    },
+    {
+      "tag": "bantuan",
+      "patterns": ["bisa apa", "bantu", "tolong", "cara pakai", "fitur"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 5,
+      "action": "get_help"
+    },
+    {
+      "tag": "baterai",
+      "patterns": ["baterai", "battery", "daya", "charge", "cas"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 3,
+      "action": "get_battery"
+    },
+    {
+      "tag": "jadwal_adzan",
+      "patterns": ["jadwal adzan", "jadwal sholat", "waktu sholat", "adzan apa aja"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 6,
+      "action": "get_prayer_times"
+    },
+    {
+      "tag": "adzan_berikutnya",
+      "patterns": ["adzan maghrib jam berapa", "adzan subuh jam berapa", "adzan dzuhur jam berapa", "adzan ashar jam berapa", "adzan isya jam berapa", "adzan berapa lagi", "masih lama adzan", "adzan apa sekarang", "sholat maghrib jam berapa", "sholat subuh jam berapa"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 7,
+      "action": "get_next_prayer"
+    },
+    {
+      "tag": "telpon_favorit",
+      "patterns": ["telpon anak", "telepon anak", "nelpon anak", "call anak", "telpon cucu", "telepon cucu", "nelpon cucu", "call cucu"],
+      "responses": [""],
+      "response_mode": "first",
+      "priority": 4,
+      "action": "get_favorite_contact"
+    }
+  ]
+}

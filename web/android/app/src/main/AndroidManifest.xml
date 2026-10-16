@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Izin: disamakan dgn app native asli (mesin alarm, Mode Teman, SMS darurat) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/logo"
+        android:roundIcon="@drawable/logo"
+        android:label="Nenek Mode"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <!-- Nama class fully-qualified: namespace build (com.example.nenekmode)
+             berbeda dgn paket asli class ini (com.example.nenekmode.web) -->
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name="com.example.nenekmode.web.MainActivity"
+            android:label="Nenek Mode"
+            android:theme="@style/AppTheme.NoActionBarLaunch"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+
+        <!-- ===== Mesin native asli (di-port utuh dari app Java) ===== -->
+        <receiver android:name="com.example.nenekmode.ReminderReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.CheckInReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.MedConfirmReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.AdzanReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.WaterReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.BirthdayReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.ProactiveReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.WatchdogReceiver" android:exported="false" />
+        <receiver android:name="com.example.nenekmode.EscalationReceiver" android:exported="false" />
+        <receiver
+            android:name="com.example.nenekmode.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name="com.example.nenekmode.CompanionService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+    </application>
+
+</manifest>
