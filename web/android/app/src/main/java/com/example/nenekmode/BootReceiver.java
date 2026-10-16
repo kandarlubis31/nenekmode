@@ -47,8 +47,10 @@ public class BootReceiver extends BroadcastReceiver {
         if (prefs.getBoolean("keep_alive", false)) {
             CompanionService.start(context);
         }
+        // papan info di versi web = layar JS (App.tsx routing otomatis dari prefs
+        // board_mode) — tidak ada BoardActivity native, jadi cukup buka MainActivity
         if (prefs.getBoolean("board_mode", false)) {
-            Intent board = new Intent(context, BoardActivity.class);
+            Intent board = new Intent(context, com.example.nenekmode.web.MainActivity.class);
             board.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(board);
         }

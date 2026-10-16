@@ -97,8 +97,8 @@ public class NenekNativePlugin extends Plugin {
     public void speak(PluginCall call) {
         ensureTts();
         String text = call.getString("text", "");
-        float pitch = (float) call.getDouble("pitch", 0.85);
-        float rate = (float) call.getDouble("rate", 0.75);
+        float pitch = call.getDouble("pitch", 0.85).floatValue();
+        float rate = call.getDouble("rate", 0.75).floatValue();
         double volume = call.getDouble("volume", 1.0);
 
         if (tts == null || text.isEmpty()) {
