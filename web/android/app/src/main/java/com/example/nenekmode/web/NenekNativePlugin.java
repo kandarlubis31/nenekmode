@@ -16,6 +16,7 @@ import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -419,35 +420,20 @@ public class NenekNativePlugin extends Plugin {
             call.resolve(r);
             return;
         }
-        pendingMicCall = call;
-        getActivity().requestPermissions(
-                new String[]{ Manifest.permission.RECORD_AUDIO }, 51);
+        // pola resmi Capacitor: minta izin via alias plugin -> PermissionCallback
+        requestPermissionForAlias("mic", call, "micCallback");
     }
-
-    private PluginCall pendingMicCall;
 
     @PermissionCallback
     private void micRequested(PluginCall call) {
         hasMicPermission(call);
     }
 
-    @Override
-    protected void handleOnResume() {
-        // (permission result handled via standard callback below)
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 51 && pendingMicCall != null) {
-            boolean granted = grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            JSObject r = new JSObject();
-            r.put("granted", granted);
-            pendingMicCall.resolve(r);
-            pendingMicCall = null;
-        }
+    @PermissionCallback
+    private void micCallback(PluginCall call) {
+        JSObject r = new JSObject();
+        r.put("granted", getPermissionState("mic") == PermissionState.GRANTED);
+        call.resolve(r);
     }
 
     // ================= LOKASI =================

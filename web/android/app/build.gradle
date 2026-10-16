@@ -57,8 +57,15 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    // ==== dependensi mesin native asli yang di-port (GroqClient, WeatherClient, dll) ====
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
     // wake word offline (kode native asli yang di-port)
-    implementation 'com.alphacephei:vosk-android:0.3.75'
+    // JNA di-pin 5.13.0 (aar) sesuai dokumentasi vosk — versi transitive lebih baru bisa gagal dexing
+    implementation('com.alphacephei:vosk-android:0.3.75') {
+        exclude group: 'net.java.dev.jna', module: 'jna'
+    }
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
 }
 
 apply from: 'capacitor.build.gradle'

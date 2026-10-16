@@ -47,7 +47,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         String text = msg + " (" + String.format("%02d:%02d", h, m) + ") - " + elderName;
 
         // notifikasi
-        Intent notificationIntent = new Intent(context, com.getcapacitor.CapacitorActivity.class);
+        Intent notificationIntent = new Intent(context, com.example.nenekmode.web.MainActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(context, index, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

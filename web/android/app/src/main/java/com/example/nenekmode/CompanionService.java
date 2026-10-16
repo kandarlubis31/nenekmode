@@ -687,7 +687,7 @@ public class CompanionService extends Service implements TextToSpeech.OnInitList
             nm.createNotificationChannel(ch);
         }
 
-        Intent openApp = new Intent(this, com.getcapacitor.CapacitorActivity.class);
+        Intent openApp = new Intent(this, com.example.nenekmode.web.MainActivity.class);
         PendingIntent pi = PendingIntent.getActivity(this, 0, openApp,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 

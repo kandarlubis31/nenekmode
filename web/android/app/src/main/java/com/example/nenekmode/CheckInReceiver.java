@@ -30,7 +30,7 @@ public class CheckInReceiver extends BroadcastReceiver {
         // jaring pengaman: kalau 30 menit tak ada respons -> SMS ke keluarga
         EscalationManager.arm(context);
 
-        Intent notificationIntent = new Intent(context, com.getcapacitor.CapacitorActivity.class);
+        Intent notificationIntent = new Intent(context, com.example.nenekmode.web.MainActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
