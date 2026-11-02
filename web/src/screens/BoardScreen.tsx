@@ -48,6 +48,7 @@ export default function BoardScreen({ onExit }: Props) {
   const [weatherText, setWeatherText] = useState("Cuaca: memuat...");
   const [battery, setBattery] = useState(-1);
   const [companionOn, setCompanionOn] = useState(prefs.getBoolean("keep_alive", false));
+  const [pinned, setPinned] = useState(prefs.getBoolean("board_mode", false));
 
   const loadWeather = useCallback(() => {
     const lat = prefs.getNumber("last_lat", -6.2);
@@ -59,9 +60,13 @@ export default function BoardScreen({ onExit }: Props) {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(new Date());
+    // jam harus berganti tepat di menit baru, bukan tiap 30 detik
+    const clock = window.setInterval(() => setNow(new Date()), 1000);
+    // status lambat (baterai/Teman) cukup tiap 30 detik — dulu baterai hanya
+    // dibaca sekali saat layar dibuka, jadi tampilannya bisa basi
+    const slow = window.setInterval(() => {
       setCompanionOn(prefs.getBoolean("keep_alive", false));
+      void bridge.getBatteryLevel().then(setBattery);
     }, 30000);
     loadWeather();
     void bridge.getBatteryLevel().then(setBattery);
@@ -78,7 +83,8 @@ export default function BoardScreen({ onExit }: Props) {
       .catch(() => undefined);
 
     return () => {
-      window.clearInterval(timer);
+      window.clearInterval(clock);
+      window.clearInterval(slow);
       void wakeLock?.release().catch(() => undefined);
     };
   }, [loadWeather]);
@@ -86,6 +92,13 @@ export default function BoardScreen({ onExit }: Props) {
   const exit = () => {
     prefs.setBoolean("board_mode", false);
     onExit();
+  };
+
+  // ala BoardActivity Java: bisa dijadikan mode permanen (buka langsung ke papan)
+  const togglePin = () => {
+    const next = !prefs.getBoolean("board_mode", false);
+    prefs.setBoolean("board_mode", next);
+    setPinned(next);
   };
 
   return (
@@ -103,6 +116,11 @@ export default function BoardScreen({ onExit }: Props) {
       </div>
       <div className="info">Mode Teman: {companionOn ? "AKTIF ✅" : "MATI ❌"}</div>
       <div className="info">{battery >= 0 ? `Baterai ${battery}%` : "Baterai: -"}</div>
+      <button className="hint" onClick={togglePin}>
+        {pinned
+          ? "📌 Mode Papan: AKTIF — app langsung buka papan info (ketuk buat matikan)"
+          : "📌 Jadikan Mode Papan (app langsung buka sini)"}
+      </button>
       <button className="hint" onClick={exit}>
         (ketuk untuk kembali ke layar utama)
       </button>

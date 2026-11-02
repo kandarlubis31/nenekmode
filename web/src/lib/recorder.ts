@@ -47,9 +47,11 @@ export async function recordWithVad(stopFlag: StopFlag): Promise<Uint8Array | nu
   let finished = false;
 
   return await new Promise<Uint8Array | null>((resolve) => {
+    let watchdog = 0;
     const finish = (result: Uint8Array | null) => {
       if (finished) return;
       finished = true;
+      if (watchdog) window.clearTimeout(watchdog);
       // gerbang anti-halusinasi: audio dengan energi rerata rendah
       // (noise senyap / gema TTS pelan) jangan dikirim ke Whisper —
       // di situ Whisper sering mengarang "terima kasih"/"halo"
@@ -108,6 +110,17 @@ export async function recordWithVad(stopFlag: StopFlag): Promise<Uint8Array | nu
         }
       }
     };
+
+    // WebView bisa men-suspend AudioContext (autoplay policy) sampai ada
+    // sentuhan. Tanpa resume, onaudioprocess tak pernah dipanggil dan promise
+    // tak pernah selesai -> tombol mic macet selamanya.
+    void ctx.resume?.().catch(() => undefined);
+
+    // jaring pengaman: pada sebagian WebView callback audio berhenti saat app
+    // di-background. Jangan biarkan rekaman menggantung tanpa akhir.
+    watchdog = window.setTimeout(() => {
+      finish(speechDetected ? concatPcm(chunks) : null);
+    }, MAX_RECORDING_MS + 3000);
 
     source.connect(processor);
     processor.connect(ctx.destination);

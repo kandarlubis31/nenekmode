@@ -9,3 +9,6 @@ captures/
 .externalNativeBuild
 .cxx
 .env
+
+# android build output
+app/build

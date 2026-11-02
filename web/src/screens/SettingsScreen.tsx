@@ -3,6 +3,7 @@ import { prefs } from "../lib/prefs";
 import { getMedTimes } from "../lib/actions";
 import { testApiKey, resolveApiKey } from "../lib/groq";
 import {
+  CODES,
   cancelReminders,
   cancelBirthday,
   cancelWater,
@@ -11,6 +12,7 @@ import {
   scheduleWaterNext,
 } from "../lib/scheduling";
 import { applyCheckInSetting, applyReminderSetting } from "../lib/receivers";
+import { disarmEscalation } from "../lib/escalation";
 import * as prayer from "../lib/prayer";
 import * as bridge from "../native/bridge";
 
@@ -34,7 +36,22 @@ function parseTimeInt(s: string, fallback: number): number {
 
 function isValidPhoneNumber(phone: string): boolean {
   const p = phone.replace(/[^0-9+]/g, "");
-  return (p.startsWith("0") || p.startsWith("+62")) && p.length >= 10;
+  // izinkan nomor dinas singkat (mis. 112/118) maupun nomor lengkap
+  return p.length >= 3;
+}
+
+function Switch({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="switch-row">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        className="switch"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </div>
+  );
 }
 
 export default function SettingsScreen({ onBack }: Props) {
@@ -49,6 +66,7 @@ export default function SettingsScreen({ onBack }: Props) {
   const [favNumber, setFavNumber] = useState(prefs.getString("favorite_contact_number", ""));
   const [fontSize, setFontSize] = useState(prefs.getInt("font_size", 1));
   const [highContrast, setHighContrast] = useState(prefs.getBoolean("high_contrast", false));
+  const [greetingOnOpen, setGreetingOnOpen] = useState(prefs.getBoolean("greeting_on_open", true));
 
   const initialMed = getMedTimes();
   const medSlot = (i: number) => initialMed[i] ?? { h: i === 0 ? 8 : i === 1 ? 14 : 20, m: 0, en: false };
@@ -67,7 +85,7 @@ export default function SettingsScreen({ onBack }: Props) {
 
   // ---- Teknis ----
   const [keepAlive, setKeepAlive] = useState(prefs.getBoolean("keep_alive", false));
-  const [proactive, setProactive] = useState(prefs.getBoolean("companion_enabled", true));
+  const [proactive, setProactive] = useState(prefs.getBoolean("companion_enabled", false));
   const [wakeMode, setWakeMode] = useState(prefs.getString("wake_mode", "off") === "on");
   const [newsEnabled, setNewsEnabled] = useState(prefs.getBoolean("news_enabled", true));
   const [adzanEnabled, setAdzanEnabled] = useState(prefs.getBoolean("adzan_enabled", true));
@@ -158,6 +176,12 @@ export default function SettingsScreen({ onBack }: Props) {
       showToast("Nomor kontak favorit tidak valid");
       return;
     }
+    // dulu saklar pengingat menyala tapi semua jam mati -> tersimpan sebagai
+    // OFF tanpa penjelasan. Sekarang beri tahu sebabnya.
+    if (reminderEnabled && !medEn.some(Boolean)) {
+      showToast("Pilih minimal satu jam minum obat dulu");
+      return;
+    }
 
     prefs.setString("nenek_name", nenekName.trim());
     prefs.setString("assistant_name", assistantName.trim());
@@ -166,6 +190,7 @@ export default function SettingsScreen({ onBack }: Props) {
     prefs.setString("favorite_contact_number", favNumber.trim());
     prefs.setInt("font_size", fontSize);
     prefs.setBoolean("high_contrast", highContrast);
+    prefs.setBoolean("greeting_on_open", greetingOnOpen);
     prefs.setString("reminder_message", reminderMessage.trim());
 
     // jadwal obat multi-slot
@@ -176,7 +201,9 @@ export default function SettingsScreen({ onBack }: Props) {
     }));
     prefs.setString("med_times", JSON.stringify(times));
     const anyEnabled = times.some((t) => t.en);
-    prefs.setBoolean("reminder_enabled", anyEnabled || reminderEnabled);
+    // pengingat aktif hanya kalau saklar master ON DAN ada minimal satu slot
+    const reminderOn = reminderEnabled && anyEnabled;
+    prefs.setBoolean("reminder_enabled", reminderOn);
 
     // check-in
     prefs.setInt("checkin_hour", clamp(parseTimeInt(checkinHour, 9), 0, 23));
@@ -216,13 +243,17 @@ export default function SettingsScreen({ onBack }: Props) {
 
     // terapkan semua alarm
     cancelReminders();
-    applyReminderSetting(anyEnabled || reminderEnabled);
+    applyReminderSetting(reminderOn);
     applyCheckInSetting(
       checkinEnabled,
       clamp(parseTimeInt(checkinHour, 9), 0, 23),
       clamp(parseTimeInt(checkinMin, 0), 0, 59),
     );
-    proactiveRescheduleNext();
+    if (proactive) proactiveRescheduleNext();
+    else void bridge.cancelAlarm(CODES.proactive);
+
+    // mematikan pemantauan = batalkan juga eskalasi yang sudah terlanjur armed
+    if (!escalationEnabled || !checkinEnabled) disarmEscalation();
 
     if (adzanEnabled) prayer.refreshIfNeededAsync();
     else prayer.cancelAll();
@@ -244,13 +275,6 @@ export default function SettingsScreen({ onBack }: Props) {
     showToast("Pengaturan tersimpan!");
     window.setTimeout(onBack, 800);
   };
-
-  const Switch = ({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) => (
-    <div className="switch-row">
-      <span>{label}</span>
-      <input type="checkbox" className="switch" checked={value} onChange={(e) => onChange(e.target.checked)} />
-    </div>
-  );
 
   return (
     <div className="screen">
@@ -313,6 +337,19 @@ export default function SettingsScreen({ onBack }: Props) {
           </div>
 
           <div className="category">
+            <h2>🔊 Suara</h2>
+            <Switch
+              label="Sapa dengan suara saat aplikasi dibuka"
+              value={greetingOnOpen}
+              onChange={setGreetingOnOpen}
+            />
+            <div className="note">
+              Kalau dimatikan, aplikasi tidak bersuara sendiri saat dibuka — cukup tekan tombol
+              Bicara kalau mau mulai ngobrol.
+            </div>
+          </div>
+
+          <div className="category">
             <h2>💊 Pengingat Obat</h2>
             <div className="note">Jadwal minum obat (maks 3 waktu per hari)</div>
             {[0, 1, 2].map((i) => (
@@ -321,6 +358,7 @@ export default function SettingsScreen({ onBack }: Props) {
                   type="number"
                   min={0}
                   max={23}
+                  aria-label={`Jam minum obat ${i + 1}`}
                   value={medH[i]}
                   onChange={(e) => setMedH((prev) => prev.map((v, j) => (j === i ? e.target.value : v)))}
                 />
@@ -329,12 +367,14 @@ export default function SettingsScreen({ onBack }: Props) {
                   type="number"
                   min={0}
                   max={59}
+                  aria-label={`Menit minum obat ${i + 1}`}
                   value={medM[i]}
                   onChange={(e) => setMedM((prev) => prev.map((v, j) => (j === i ? e.target.value : v)))}
                 />
                 <input
                   type="checkbox"
                   className="switch"
+                  aria-label={`Aktifkan jadwal obat ${i + 1}`}
                   checked={medEn[i]}
                   onChange={(e) => setMedEn((prev) => prev.map((v, j) => (j === i ? e.target.checked : v)))}
                 />

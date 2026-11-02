@@ -9,6 +9,15 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(RND() * arr.length)];
 }
 
+/** Normalisasi jawaban kuis: huruf kecil, buang tanda baca, rapikan spasi. */
+function normalizeAnswer(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // ----- Kuis ringan (stimulasi kognitif): [pertanyaan, ...jawaban benar] -----
 const QUIZ: string[][] = [
   ["Hewan apa yang dijuluki 'sahabat petani'?", "sapi"],
@@ -18,7 +27,7 @@ const QUIZ: string[][] = [
   ["Alat musik tradisional dari Jawa Barat apa?", "angklung"],
   ["Hewan apa yang suka makan wortel?", "kelinci"],
   ["Kalau hari ini Senin, besok harinya apa?", "selasa"],
-  ["Gunung tertinggi di Indonesia apa?", "punckak jaya"],
+  ["Gunung tertinggi di Indonesia apa?", "puncak jaya"],
   ["Warna bendera Indonesia apa saja?", "merah putih"],
   ["Kalau 5 dikali 8, hasilnya berapa?", "40"],
   ["Pahlawan wanita dari Aceh siapa?", "cut nyak Dien", "cut nyakdhien", "dien"],
@@ -58,6 +67,11 @@ const STORIES = [
   "Nasihat untuk hari ini: jangan terlalu sering inget yang sudah lewat, jangan juga kuatir yang belum datang. Cukup syukuri hari ini, karena hari ini adalah karunia yang paling nyata.",
 ];
 
+/** Daftar kuis mentah buat uji regresi (pastikan semua jawaban resmi diterima). */
+export function allQuizItems(): ReadonlyArray<readonly string[]> {
+  return QUIZ;
+}
+
 export const content = {
   getRandomQuizQuestion(): string {
     return pick(QUIZ)[0];
@@ -71,14 +85,22 @@ export const content = {
   },
 
   checkQuizAnswer(question: string, answer: string): boolean {
-    for (const qa of QUIZ) {
-      if (qa[0] === question) {
-        const a = answer.toLowerCase().trim();
-        for (let i = 1; i < qa.length; i++) {
-          if (a.includes(qa[i].toLowerCase())) return true;
-        }
-        return false;
-      }
+    const qa = QUIZ.find((q) => q[0] === question);
+    if (!qa) return false;
+    const a = normalizeAnswer(answer);
+    if (!a) return false;
+    const words = new Set(a.split(" "));
+    for (let i = 1; i < qa.length; i++) {
+      const target = normalizeAnswer(qa[i]);
+      if (!target) continue;
+      // cocok penuh ("25" di "25", "selasa" di "hari selasa")
+      if (a.includes(target)) return true;
+      // cocok per kata: "merah dan putih" tetap benar untuk jawaban "merah putih",
+      // dan "cut nyak dhien" benar untuk "cut nyak dien"
+      const targetWords = target.split(" ");
+      if (targetWords.every((w) => words.has(w))) return true;
+      // jawaban sebagian tapi kata kuncinya tepat ("puncak", "merah")
+      if (targetWords[0].length >= 4 && words.has(targetWords[0])) return true;
     }
     return false;
   },

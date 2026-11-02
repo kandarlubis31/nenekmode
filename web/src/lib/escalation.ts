@@ -32,9 +32,18 @@ export function cancelEscalation(): void {
   void bridge.cancelAlarm(ESCALATION_CODE);
 }
 
+/** Saklar eskalasi dimatikan di Pengaturan: batalkan pemantauan yang masih jalan. */
+export function disarmEscalation(): void {
+  const wasArmed = prefs.getBoolean("escalation_armed", false);
+  prefs.setBoolean("escalation_armed", false);
+  if (wasArmed) void bridge.cancelAlarm(ESCALATION_CODE);
+}
+
 /** Dipanggil EscalationReceiver: tidak ada respons -> kirim SMS ke keluarga. */
 export async function trigger(): Promise<void> {
   if (!prefs.getBoolean("escalation_armed", false)) return;
+  // saklar bisa dimatikan setelah alarm terlanjur dipasang (mis. reboot)
+  if (!prefs.getBoolean("escalation_enabled", true)) return;
   prefs.setBoolean("escalation_armed", false); // sekali per sesi cek
 
   const number = prefs.getString("emergency_number", "").trim();

@@ -43,6 +43,30 @@ interface PendingFollowup {
   ts: number;
 }
 
+/** Kata-kata dibandingkan utuh (bukan substring) supaya "pagi" tak dihitung "ya". */
+function words(raw: string): Set<string> {
+  return new Set(raw.split(/[^a-z0-9]+/).filter(Boolean));
+}
+
+/** Jawaban setuju ala lansia: "ya", "iya", "sudah", "udah", "beres", ... */
+export function isYes(raw: string): boolean {
+  const w = words(raw);
+  return (
+    raw.includes("sudah") || raw.includes("udah") ||
+    w.has("ya") || w.has("iya") || w.has("yah") || w.has("beres") || w.has("betul")
+  );
+}
+
+/** Jawaban belum/tidak: "belum", "gak", "nggak", "enggak", "tidak", ... */
+export function isNo(raw: string): boolean {
+  const w = words(raw);
+  return (
+    raw.includes("belum") ||
+    w.has("gak") || w.has("ga") || w.has("nggak") ||
+    w.has("enggak") || w.has("tidak") || w.has("kagak")
+  );
+}
+
 function getPendingFollowup(): PendingFollowup | null {
   const s = prefs.getString("pending_followup", "");
   if (!s) return null;
@@ -58,7 +82,12 @@ export function hasPendingFollowup(): boolean {
 }
 
 export function storeFollowup(complaint: string): void {
-  if (hasPendingFollowup()) return; // jangan numpuk
+  const existing = getPendingFollowup();
+  if (existing) {
+    const age = Date.now() - (existing.ts ?? 0);
+    // catatan lama yang sudah basi jangan menghalangi keluhan baru
+    if (age <= 24 * 60 * 60 * 1000) return;
+  }
   prefs.setString(
     "pending_followup",
     JSON.stringify({ complaint, ts: Date.now() }),
@@ -170,12 +199,8 @@ export class ConversationEngine {
 
     // --- konfirmasi minum obat (prioritas tertinggi) + streak ---
     if (this.isWaitingMedConfirm()) {
-      const yes =
-        raw.includes("sudah") || raw.includes("udah") ||
-        raw === "ya" || raw.includes("sudah minum") || raw.includes("udah minum");
-      const no =
-        raw.includes("belum") || raw.includes("belum minum") ||
-        raw.includes("belum kok") || raw === "nggak" || raw.includes("belum jadi");
+      const yes = isYes(raw);
+      const no = isNo(raw);
       if (yes || no) {
         prefs.setBoolean("med_confirm_waiting", false);
         if (yes) {
@@ -222,20 +247,26 @@ export class ConversationEngine {
 
     // --- jawaban kuis ---
     if (this.isWaitingQuizAnswer()) {
+      this.restoreQuiz();
+      if (!this.currentQuiz) {
+        // kuis dimulai sebelum layar dibangun ulang (mis. buka Pengaturan)
+        prefs.setBoolean("quiz_waiting", false);
+        this.out.speak(
+          `Kuisnya keburu hilang. Bilang 'mulai kuis' kalau mau main lagi ya ${nenekName()}.`,
+        );
+        return true;
+      }
       const wantsStop =
         raw.includes("nggak jadi") || raw.includes("stop") ||
         raw.includes("berhenti") || raw.includes("udahan");
       if (wantsStop) {
-        prefs.setBoolean("quiz_waiting", false);
-        this.currentQuiz = "";
+        this.clearQuiz();
         this.out.speak("Oke, kuisnya di-stop dulu. Kalau mau lagi, bilang aja mulai kuis.");
         return true;
       }
       const correct = content.checkQuizAnswer(this.currentQuiz, raw);
-      prefs.setBoolean("quiz_waiting", false);
       const answer = this.currentQuizAnswer;
-      this.currentQuiz = "";
-      this.currentQuizAnswer = "";
+      this.clearQuiz();
       if (correct) {
         this.out.speak(
           `Wih, benar sekali! Pinter banget ${nenekName()}. Mau coba lagi nggak? Bilang aja mulai kuis.`,
@@ -257,6 +288,10 @@ export class ConversationEngine {
     if (raw.includes("kuis") || raw.includes("tebak") || raw.includes("kuis tebak")) {
       this.currentQuiz = content.getRandomQuizQuestion();
       this.currentQuizAnswer = content.getQuizAnswer(this.currentQuiz);
+      // simpan ke prefs: objek engine ikut hilang saat layar dibangun ulang,
+      // dulu jawaban berikutnya jadi "Hampir benar! Jawabannya ." (kosong).
+      prefs.setString("quiz_current", this.currentQuiz);
+      prefs.setString("quiz_answer", this.currentQuizAnswer);
       prefs.setBoolean("quiz_waiting", true);
       this.out.speak(`Oke, kuis ringan dulu ${nenekName()}. ${this.currentQuiz}`);
       return true;
@@ -270,8 +305,8 @@ export class ConversationEngine {
 
     // --- pengingat minum air (konfirmasi) ---
     if (prefs.getBoolean("water_confirm_waiting", false)) {
-      const drank = raw.includes("sudah") || raw.includes("udah") || raw === "ya";
-      const notYet = raw.includes("belum") || raw === "nggak";
+      const drank = isYes(raw);
+      const notYet = isNo(raw);
       if (drank || notYet) {
         prefs.setBoolean("water_confirm_waiting", false);
         if (drank) {
@@ -417,6 +452,21 @@ export class ConversationEngine {
    * Streak minum obat tepat waktu: hari ini != kemarin -> +1, else reset ke 1.
    * @returns kalimat pujian ("" jika belum layak)
    */
+  /** Lanjutkan kuis yang tersimpan (setelah layar dibangun ulang). */
+  private restoreQuiz(): void {
+    if (this.currentQuiz) return;
+    this.currentQuiz = prefs.getString("quiz_current", "");
+    this.currentQuizAnswer = prefs.getString("quiz_answer", "");
+  }
+
+  private clearQuiz(): void {
+    prefs.setBoolean("quiz_waiting", false);
+    prefs.remove("quiz_current");
+    prefs.remove("quiz_answer");
+    this.currentQuiz = "";
+    this.currentQuizAnswer = "";
+  }
+
   private updateMedStreak(): string {
     try {
       const fmt = (d: Date) =>

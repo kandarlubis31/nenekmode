@@ -106,20 +106,35 @@ public class NenekNativePlugin extends Plugin {
             return;
         }
 
-        // tunggu TTS ready (init bisa async sekali di awal)
+        if (ttsInitFailed) {
+            call.resolve();
+            return;
+        }
+        // tunggu TTS ready (init bisa async, di HP lambat > 0.5 dtk). Dulu
+        // hanya dicek sekali setelah 500 ms lalu call di-resolve tanpa
+        // bersuara -> sapaan pembuka (ucapan pertama) hilang diam-diam.
         if (!ttsReady) {
-            PluginCall waiting = call;
-            getContext().getMainLooper().getThread().getClass(); // no-op lint
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                if (ttsReady) {
-                    speakNow(waiting, text, pitch, rate, volume);
-                } else {
-                    waiting.resolve();
-                }
-            }, 500);
+            waitForTts(new android.os.Handler(android.os.Looper.getMainLooper()),
+                    call, text, pitch, rate, volume, 0);
             return;
         }
         speakNow(call, text, pitch, rate, volume);
+    }
+
+    /** Tahan ucapan sampai TextToSpeech siap (maks ~6 dtk), jangan dibuang. */
+    private void waitForTts(android.os.Handler handler, PluginCall call, String text,
+                            float pitch, float rate, double volume, int attempt) {
+        if (ttsReady) {
+            speakNow(call, text, pitch, rate, volume);
+            return;
+        }
+        if (ttsInitFailed || attempt >= 12) {
+            call.resolve();
+            return;
+        }
+        handler.postDelayed(
+                () -> waitForTts(handler, call, text, pitch, rate, volume, attempt + 1),
+                500);
     }
 
     private void speakNow(PluginCall call, String text, float pitch, float rate, double volume) {
@@ -141,6 +156,13 @@ public class NenekNativePlugin extends Plugin {
         try {
             if (tts != null) tts.stop();
         } catch (Exception ignored) { }
+        // Utterance yang di-flush/di-stop tidak selalu memanggil onDone ->
+        // resolve semua call yang masih menunggu biar JS tidak nyangkut
+        // (antrian TTS di sisi JS bisa berhenti permanen kalau tidak).
+        for (String id : new java.util.ArrayList<>(pendingCalls.keySet())) {
+            PluginCall pending = pendingCalls.remove(id);
+            if (pending != null) pending.resolve();
+        }
         call.resolve();
     }
 
@@ -498,7 +520,7 @@ public class NenekNativePlugin extends Plugin {
     }
 
     // ================= SINKRON PREFS =================
-    // Format snapshot: {key: ["s"|"b"|"i", value]} — JS (localStorage) adalah
+    // Format snapshot: {key: ["s"|"b"|"i"|"l"|"f", value]} — JS (localStorage) adalah
     // sumber kebenaran settings; native menulis balik state runtime (mis.
     // med_confirm_waiting) yang di-pull JS saat app dibuka.
 
@@ -516,21 +538,29 @@ public class NenekNativePlugin extends Plugin {
             java.util.Iterator<String> keys = obj.keys();
             while (keys.hasNext()) {
                 String k = keys.next();
-                org.json.JSONArray pair = obj.getJSONArray(k);
-                String type = pair.getString(0);
-                switch (type) {
-                    case "b":
-                        ed.putBoolean(k, pair.getBoolean(1));
-                        break;
-                    case "i":
-                        ed.putInt(k, pair.getInt(1));
-                        break;
-                    case "l":
-                        ed.putLong(k, pair.getLong(1));
-                        break;
-                    default:
-                        ed.putString(k, pair.getString(1));
-                        break;
+                try {
+                    org.json.JSONArray pair = obj.getJSONArray(k);
+                    String type = pair.getString(0);
+                    switch (type) {
+                        case "b":
+                            ed.putBoolean(k, pair.getBoolean(1));
+                            break;
+                        case "i":
+                            ed.putInt(k, pair.getInt(1));
+                            break;
+                        case "l":
+                            ed.putLong(k, pair.getLong(1));
+                            break;
+                        case "f":
+                            // float (mis. last_lat/last_lon) — kode Java lain baca getFloat
+                            ed.putFloat(k, (float) pair.getDouble(1));
+                            break;
+                        default:
+                            ed.putString(k, pair.getString(1));
+                            break;
+                    }
+                } catch (Exception keyErr) {
+                    // satu key rusak jangan sampai membatalkan seluruh sinkronisasi
                 }
             }
             ed.apply();

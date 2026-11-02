@@ -44,6 +44,9 @@ export interface ChatLine {
 }
 
 const HISTORY_KEY = "chat_history";
+/** Batas riwayat chat. Tanpa batas, localStorage lama-lama penuh dan
+ *  setiap sync ke native mengirim string raksasa. */
+const HISTORY_MAX_LINES = 300;
 
 function nowTs(): string {
   const d = new Date();
@@ -62,6 +65,15 @@ export function useAssistant() {
     prefs.getBoolean("keep_alive", false),
   );
   const [lastSpokenText, setLastSpokenText] = useState("");
+  // Dihitung SEKALI per pemasangan layar. Dulu dipanggil saat render, jadi
+  // teks sapaan berubah acak setiap status berubah (kedip di layar).
+  const [greetingText] = useState(() =>
+    greeting(
+      ConversationEngine.getTimeOfDay(),
+      prefs.getString("nenek_name", "Bu"),
+      prefs.getString("assistant_name", "Kandar"),
+    ),
+  );
 
   const statusKind: StatusKind = (() => {
     const s = statusText.toLowerCase();
@@ -92,6 +104,8 @@ export function useAssistant() {
   // transkrip mic terakhir — untuk jeda 30 dtk antar-ucapan identik dari mic
   // (Whisper mengulang hasil palsu utk audio nyaris senyap / gema beruntun)
   const lastMicInputRef = useRef<{ raw: string; at: number }>({ raw: "", at: 0 });
+  // instance sudah hilang (pindah layar)? timer/loop lama tidak boleh jalan.
+  const disposedRef = useRef(false);
 
   if (!matcherRef.current) matcherRef.current = new IntentMatcher();
 
@@ -105,20 +119,28 @@ export function useAssistant() {
     for (const raw of saved.split("\n")) {
       if (!raw.trim()) continue;
       // riwayat lama bisa sudah ter-dobel (bug spam lama) — buang duplikat
-      // persis yang berurutan, lalu tulis balik kalau ada yang dibersihkan
+      // persis, lalu tulis balik kalau ada yang dibersihkan
       if (seen.has(raw)) continue;
       seen.add(raw);
       lines.push({ raw, isUser: raw.includes("] Anda:") });
     }
-    if (lines.length !== saved.split("\n").filter((l) => l.trim()).length) {
-      prefs.setString(HISTORY_KEY, lines.map((l) => l.raw).join("\n"));
+    const trimmed = lines.slice(-HISTORY_MAX_LINES);
+    if (trimmed.length !== saved.split("\n").filter((l) => l.trim()).length) {
+      prefs.setString(HISTORY_KEY, trimmed.map((l) => l.raw).join("\n"));
     }
-    setChatLines(lines);
+    setChatLines(trimmed);
   }, []);
 
   const appendHistoryLog = useCallback((entry: string) => {
     const prev = prefs.getString(HISTORY_KEY, "");
-    prefs.setString(HISTORY_KEY, prev ? prev + "\n" + entry : entry);
+    const next = prev ? prev + "\n" + entry : entry;
+    const lines = next.split("\n").filter((l) => l.trim());
+    prefs.setString(
+      HISTORY_KEY,
+      lines.length > HISTORY_MAX_LINES
+        ? lines.slice(-HISTORY_MAX_LINES).join("\n")
+        : lines.join("\n"),
+    );
   }, []);
 
   const addToHistory = useCallback(
@@ -135,15 +157,24 @@ export function useAssistant() {
   // dedupe: kalau ada beberapa speak beruntun (mis. sapaan + peringatan
   // baterai), cukup SATU timer listen terakhir — cegah dua loop mic paralel.
   const listenTimerRef = useRef<number | null>(null);
+  const cancelScheduledListening = useCallback(() => {
+    if (listenTimerRef.current !== null) {
+      window.clearTimeout(listenTimerRef.current);
+      listenTimerRef.current = null;
+    }
+  }, []);
   const scheduleListening = useCallback((delayMs: number) => {
-    if (listenTimerRef.current !== null) window.clearTimeout(listenTimerRef.current);
+    // layar sudah dibongkar? jangan hidupkan mic dari instance lama
+    // (dulu timer-nya tidak dibatalkan saat unmount -> bisa dobel dengar)
+    if (disposedRef.current) return;
+    cancelScheduledListening();
     listenTimerRef.current = window.setTimeout(() => {
       listenTimerRef.current = null;
-      if (autoListenRef.current && !listeningRef.current) {
+      if (autoListenRef.current && !disposedRef.current && !listeningRef.current) {
         void startListeningLoop();
       }
     }, delayMs);
-  }, []);
+  }, [cancelScheduledListening]);
 
   const speakResponse = useCallback(
     (text: string, pitch = 0.85, rate = 0.75, afterDone?: () => void) => {
@@ -156,13 +187,23 @@ export function useAssistant() {
         .then(() => {
           updateStatus("Siap");
           afterDone?.();
-          if (greetedRef.current) scheduleListening(300);
+          // hanya lanjut dengar kalau mode dengar memang masih aktif
+          if (greetedRef.current && autoListenRef.current) scheduleListening(300);
         });
     },
     [scheduleListening, updateStatus],
   );
 
   // ================= OUTPUT ENGINE (marker) =================
+
+  const processLocalResponse = useCallback(
+    (response: string) => {
+      if (!response || !response.trim()) return;
+      addToHistory(`${prefs.getString("assistant_name", "Kandar")}: ${response}`);
+      speakResponse(response, 0.85, 0.75);
+    },
+    [addToHistory, speakResponse],
+  );
 
   const announceNews = useCallback(() => {
     updateStatus("Ambil berita...");
@@ -178,8 +219,9 @@ export function useAssistant() {
         const n = Math.min(3, headlines.length);
         for (let i = 0; i < n; i++) sb += `Berita ${i + 1}: ${headlines[i]}. `;
         sb += `Gimana ${nenek}, ada yang mau diceritain lebih?`;
-        addToHistory(`${prefs.getString("assistant_name", "Kandar")}: [Berita]`);
-        speakResponse(sb, 0.85, 0.75);
+        // tampilkan juga di chat, bukan cuma diucapkan (dulu bubble-nya cuma
+        // "[Berita]" sehingga isi berita tak bisa dibaca ulang)
+        processLocalResponse(sb);
       },
       onError: () => {
         speakResponse(
@@ -187,16 +229,7 @@ export function useAssistant() {
         );
       },
     });
-  }, [addToHistory, speakResponse, updateStatus]);
-
-  const processLocalResponse = useCallback(
-    (response: string) => {
-      if (!response || !response.trim()) return;
-      addToHistory(`${prefs.getString("assistant_name", "Kandar")}: ${response}`);
-      speakResponse(response, 0.85, 0.75);
-    },
-    [addToHistory, speakResponse],
-  );
+  }, [processLocalResponse, speakResponse, updateStatus]);
 
   const handleEngineOutput = useCallback(
     (text: string) => {
@@ -226,9 +259,13 @@ export function useAssistant() {
     [announceNews, processLocalResponse],
   );
 
+  // Output engine selalu pakai callback render terbaru (handleEngineOutput
+  // stateful) — engine dibuat sekali, jadi kita arahkan lewat ref.
+  const engineOutputRef = useRef(handleEngineOutput);
+  engineOutputRef.current = handleEngineOutput;
   if (!engineRef.current) {
     engineRef.current = new ConversationEngine(memoryRef.current, {
-      speak: handleEngineOutput,
+      speak: (text) => engineOutputRef.current(text),
     }, {
       snoozeMedTenMinutes: () => {
         void bridge.scheduleAlarm({
@@ -242,8 +279,6 @@ export function useAssistant() {
       prayerNextSpeech: (elderName) => prayer.nextPrayerSpeech(elderName),
     });
   }
-  // sinkronkan output engine tiap render (handleEngineOutput stateful)
-  engineRef.current = engineRef.current as ConversationEngine;
 
   // ================= AKSI LOKAL =================
 
@@ -355,14 +390,21 @@ export function useAssistant() {
     speakResponse(healthMsg, 1.0, 0.8);
   }, [addToHistory, speakResponse]);
 
-  const getBatteryMsg = useCallback(() => {
-    const level = lastBatteryRef.current;
+  const batteryMessage = useCallback((level: number) => {
     let msg = `Baterai HP ${prefs.getString("nenek_name", "Bu")} sekarang ${level} persen.`;
     if (level <= 20) msg += " Sudah rendah, sebaiknya segera dicharge.";
     else if (level <= 50) msg += " Masih cukup.";
     else msg += " Aman.";
     return msg;
   }, []);
+
+  /** Baca level baterai TERBARU dulu (dulu memakai angka saat app dibuka,
+   *  jadi setelah dicharge asisten masih bilang baterai rendah). */
+  const speakBattery = useCallback(async () => {
+    const level = await bridge.getBatteryLevel();
+    if (level >= 0) lastBatteryRef.current = level;
+    processLocalResponse(batteryMessage(lastBatteryRef.current));
+  }, [batteryMessage, processLocalResponse]);
 
   const handleLocalAction = useCallback(
     (action: string) => {
@@ -406,7 +448,7 @@ export function useAssistant() {
           processLocalResponse(HELP_TEXT);
           break;
         case "get_battery":
-          processLocalResponse(getBatteryMsg());
+          void speakBattery();
           break;
         case "get_favorite_contact":
           void handleFavoriteContact();
@@ -417,8 +459,8 @@ export function useAssistant() {
       }
     },
     [
-      fetchWeatherWithLocation, getBatteryMsg, handleFavoriteContact,
-      handleHealthButton, handlePanicSituation, processLocalResponse, updateStatus,
+      fetchWeatherWithLocation, handleFavoriteContact, handleHealthButton,
+      handlePanicSituation, processLocalResponse, speakBattery, updateStatus,
     ],
   );
 
@@ -472,7 +514,7 @@ export function useAssistant() {
         }
       }
       if (raw.includes("baterai") || raw.includes("battery")) {
-        processLocalResponse(getBatteryMsg());
+        void speakBattery();
         return;
       }
 
@@ -520,21 +562,31 @@ export function useAssistant() {
         }
       }
 
+      // Riwayat untuk LLM TANPA baris yang baru saja ditambahkan oleh
+      // addToHistory di atas — kalau tidak, kalimat user terkirim dua kali
+      // (riwayat + pesan terakhir) dan jawabannya bisa jadi ngawur.
+      const historyForLlm = prefs
+        .getString(HISTORY_KEY, "")
+        .split("\n")
+        .map((l) => {
+          const t = l.trim();
+          if (!t) return "";
+          const idx = t.indexOf("] ");
+          return idx >= 0 ? t.substring(idx + 2).trim() : t;
+        })
+        .filter(Boolean);
+      const lastHistory = historyForLlm[historyForLlm.length - 1];
+      if (lastHistory && lastHistory.toLowerCase() === `anda: ${raw}`) {
+        historyForLlm.pop();
+      }
+
       getResponse(
         raw,
         prefs.getString("nenek_name", "Bu"),
         prefs.getString("assistant_name", "Kandar"),
-        "", // intent sudah ditangani matcher lokal di atas
+        matcher.getJsonString(), // daftar intent buat LLM (yang tak sempat cocok lokal)
         memoryRef.current.getPromptBlock(),
-        prefs.getString(HISTORY_KEY, "")
-          .split("\n")
-          .map((l) => {
-            const t = l.trim();
-            if (!t) return "";
-            const idx = t.indexOf("] ");
-            return idx >= 0 ? t.substring(idx + 2).trim() : t;
-          })
-          .filter(Boolean),
+        historyForLlm,
         {
           onSuccess: (response) => {
             if (response.startsWith("[ACTION:")) {
@@ -564,15 +616,15 @@ export function useAssistant() {
       );
     },
     [
-      addToHistory, getBatteryMsg, handleFavoriteContact, handleLocalAction,
-      handleRepeatCommand, handleStopCommand, processLocalResponse, updateStatus,
+      addToHistory, handleFavoriteContact, handleLocalAction, handleRepeatCommand,
+      handleStopCommand, processLocalResponse, speakBattery, updateStatus,
     ],
   );
 
   // ================= VOICE LOOP (VAD -> WHISPER) =================
 
   const startListeningLoop = useCallback(async () => {
-    if (listeningRef.current) return;
+    if (listeningRef.current || disposedRef.current) return;
     if (!autoListenRef.current) return;
     // KUNCI dulu sebelum await: kalau menunggu hasil promise, dua pemanggilan
     // berdekatan (mis. timer listen ganda dari sapaan dobel) sama-sama lolos
@@ -583,8 +635,14 @@ export function useAssistant() {
       setListening(false);
     };
     const granted = await bridge.hasMicPermission();
+    if (disposedRef.current) {
+      unlock();
+      return;
+    }
     if (!granted) {
       unlock();
+      // dulu diam saja: user menekan mic, tidak terjadi apa-apa tanpa penjelasan
+      updateStatus("Izin mikrofon belum diberikan. Ketuk mic lagi lalu izinkan.");
       return;
     }
     // kalau Mode Teman native (foreground service) sedang jalan,
@@ -597,7 +655,9 @@ export function useAssistant() {
     // Jangan rekam selama TTS masih bersuara (termasuk TTS receiver native
     // seperti sapaan proaktif/reminder): kalau tidak, mic menangkap gema
     // asisten sendiri -> Whisper mentranskrip -> asisten "menjawab dirinya sendiri".
-    const ttsDeadline = Date.now() + 10000;
+    // 60 dtk: ucapan panjang (berita/cerita) bisa jauh lebih lama dari 10 dtk;
+    // kalau deadline kelewat, mic dibuka padahal asisten masih bicara -> gema.
+    const ttsDeadline = Date.now() + 60000;
     while (Date.now() < ttsDeadline) {
       if (stopFlagRef.current) {
         stopFlagRef.current = false;
@@ -704,15 +764,49 @@ export function useAssistant() {
     const timers: number[] = [];
     // kalau loop instance lama masih hidup setelah unmount (mis. remount
     // dari settings), hentikan — biar tidak ada dua pipeline dengar.
+    disposedRef.current = false;
     stopFlagRef.current = false;
+
+    // salam awal — dipasang LANGSUNG (bukan setelah nunggu GPS/baterai:
+    // dulu nemu lokasi bisa 8 detik, jadi suara pembuka muncul telat & tak
+    // terduga). Sekali per sesi app (sessionStorage), tidak tiap remount.
+    timers.push(
+      window.setTimeout(() => {
+        if (cancelled) return;
+        const isFirstTime = prefs.getBoolean("is_first_time", true);
+        if (isFirstTime) {
+          prefs.setBoolean("is_first_time", false);
+          return; // App routing ke wizard
+        }
+        greetedRef.current = true;
+        if (sessionStorage.getItem("greeted") === "1") {
+          // sesi sama: sudah pernah salam, cukup lanjutkan listen
+          scheduleListening(500);
+          return;
+        }
+        sessionStorage.setItem("greeted", "1");
+        // user bisa mematikan sapaan suara saat app dibuka (Pengaturan -> Suara)
+        if (!prefs.getBoolean("greeting_on_open", true)) {
+          scheduleListening(500);
+          return;
+        }
+        const followup = getFollowupQuestion(prefs.getString("nenek_name", "Bu"));
+        const spokenGreeting =
+          followup !== null
+            ? `Oh iya ${prefs.getString("nenek_name", "Bu")}, ${followup}`
+            : `Halo ${prefs.getString("nenek_name", "Bu")}, ${prefs.getString("assistant_name", "Kandar")} sudah siap temani ngobrol nih. Silakan bicara.`;
+        addToHistory(`${prefs.getString("assistant_name", "Kandar")}: ${spokenGreeting}`);
+        speakResponse(spokenGreeting, 0.85, 0.75);
+      }, 1000),
+    );
 
     void (async () => {
       // lokasi & jadwal adzan
       if (prayer.isEnabled()) {
         const loc = await bridge.getLastLocation();
         if (loc) {
-          prefs.setJson("last_lat", loc.lat);
-          prefs.setJson("last_lon", loc.lon);
+          prefs.setNumber("last_lat", loc.lat);
+          prefs.setNumber("last_lon", loc.lon);
         }
         prayer.refreshIfNeededAsync();
       }
@@ -734,39 +828,14 @@ export function useAssistant() {
           );
         }
       }
-
-      // salam awal — hanya SEKALI per sesi app (sessionStorage), bukan tiap
-      // mount/remount MainScreen, dan timer dibatalkan saat cleanup efek
-      // (StrictMode menjalankan efek 2x di dev tanpa cleanup -> salam dobel).
-      timers.push(
-        window.setTimeout(() => {
-          if (cancelled) return;
-          const isFirstTime = prefs.getBoolean("is_first_time", true);
-          if (isFirstTime) {
-            prefs.setBoolean("is_first_time", false);
-            return; // App routing ke wizard
-          }
-          greetedRef.current = true;
-          if (sessionStorage.getItem("greeted") === "1") {
-            // sesi sama: sudah pernah salam, cukup lanjutkan listen
-            scheduleListening(500);
-            return;
-          }
-          sessionStorage.setItem("greeted", "1");
-          let greetingText = getFollowupQuestion(prefs.getString("nenek_name", "Bu"));
-          if (greetingText !== null) {
-            greetingText = `Oh iya ${prefs.getString("nenek_name", "Bu")}, ${greetingText}`;
-          } else {
-            greetingText = `Halo ${prefs.getString("nenek_name", "Bu")}, ${prefs.getString("assistant_name", "Kandar")} sudah siap temani ngobrol nih. Silakan bicara.`;
-          }
-          addToHistory(`${prefs.getString("assistant_name", "Kandar")}: ${greetingText}`);
-          speakResponse(greetingText, 0.85, 0.75);
-        }, 1000),
-      );
     })();
 
     return () => {
       cancelled = true;
+      disposedRef.current = true;
+      // timer listen yang masih terjadwal dulu tidak pernah dibatalkan, jadi
+      // setelah remount bisa hidup dua loop mic sekaligus.
+      cancelScheduledListening();
       for (const t of timers) window.clearTimeout(t);
       stopFlagRef.current = true;
     };
@@ -811,11 +880,7 @@ export function useAssistant() {
     listening,
     companionOn,
     lastSpokenText,
-    greetingText: greeting(
-      ConversationEngine.getTimeOfDay(),
-      prefs.getString("nenek_name", "Bu"),
-      prefs.getString("assistant_name", "Kandar"),
-    ),
+    greetingText,
     checkInEnabled: prefs.getBoolean("checkin_enabled", false),
     checkInTime: `${String(prefs.getInt("checkin_hour", 9)).padStart(2, "0")}:${String(prefs.getInt("checkin_minute", 0)).padStart(2, "0")}`,
     processInput,

@@ -27,6 +27,20 @@ export const CODES = {
   watchdog: 1500,
 } as const;
 
+// Sambungkan penjadwal adzan (prayer.ts) ke plugin alarm. Tanpa ini
+// `alarmBridge` selalu null -> alarm adzan tak pernah terpasang.
+prayer.setPrayerAlarmBridge({
+  scheduleExact: (epochMs, requestCode, kind, index) => {
+    void bridge.scheduleAlarm({ code: requestCode, epochMs, kind, index });
+  },
+  cancelAll: () => {
+    for (let i = 0; i < prayer.PRAYERS.length; i++) {
+      void bridge.cancelAlarm(CODES.prayerBase + i);
+    }
+    void bridge.cancelAlarm(CODES.prayerRefresh);
+  },
+});
+
 function nextOccurrence(hour: number, minute: number): number {
   const cal = new Date();
   cal.setHours(hour, minute, 0, 0);
@@ -161,5 +175,12 @@ export function rescheduleAllOnStart(): void {
   if (prefs.getBoolean("water_enabled", false)) scheduleWaterNext();
   if (prefs.getBoolean("birthday_enabled", false)) scheduleBirthdayNext();
   if (prefs.getBoolean("companion_enabled", false)) proactiveRescheduleNext();
+  // watchdog: cek ulang & pasang lagi semua alarm tiap 6 jam (jaring pengaman
+  // kalau alarm hilang pasca reboot/force-stop).
+  void bridge.scheduleAlarm({
+    code: CODES.watchdog,
+    epochMs: Date.now() + 6 * 60 * 60 * 1000,
+    kind: "watchdog",
+  });
   rearmIfArmed();
 }

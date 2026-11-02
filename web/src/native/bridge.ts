@@ -79,15 +79,79 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 let browserSpeaking = false;
 
-export async function speak(opts: SpeakOptions): Promise<void> {
-  const n = getNative();
-  if (n) {
-    await safe(() => n.speak(opts), undefined as unknown as void);
-    return;
+/**
+ * Antrian TTS: SATU ucapan pada satu waktu.
+ *
+ * Native memakai QUEUE_FLUSH, jadi dua panggilan berdekatan (mis. sapaan
+ * pembuka + peringatan baterai + sapaan wizard) saling menimpa: suara pertama
+ * kepotong di tengah kata dan promise-nya bisa tidak pernah resolve -> mic
+ * tidak pernah dibuka lagi. Semua speak() sekarang antre di sini.
+ */
+interface SpeakTask {
+  opts: SpeakOptions;
+  resolve: () => void;
+  gen: number;
+}
+
+const speakQueue: SpeakTask[] = [];
+let speakRunning = false;
+let speakGen = 0;
+
+export function speak(opts: SpeakOptions): Promise<void> {
+  return new Promise<void>((resolve) => {
+    speakQueue.push({ opts, resolve, gen: speakGen });
+    void runSpeakQueue();
+  });
+}
+
+async function runSpeakQueue(): Promise<void> {
+  if (speakRunning) return;
+  speakRunning = true;
+  try {
+    while (speakQueue.length > 0) {
+      const task = speakQueue.shift()!;
+      if (task.gen !== speakGen) {
+        // sudah dibatalkan (stopSpeaking) selagi menunggu giliran
+        task.resolve();
+        continue;
+      }
+      try {
+        await speakOne(task.opts);
+      } catch {
+        /* abaikan: satu ucapan gagal tidak boleh memblokir sisanya */
+      }
+      task.resolve();
+    }
+  } finally {
+    speakRunning = false;
   }
+}
+
+async function speakOne(opts: SpeakOptions): Promise<void> {
+  const n = getNative();
+  const engine = n
+    ? safe(() => n.speak(opts), undefined as unknown as void)
+    : speakBrowser(opts);
+  // jaring pengaman: kalau engine tidak pernah memanggil onDone (utterance
+  // dibatalkan sistem / TTS mati di tengah jalan), antrian jangan macet.
+  const timeoutMs = Math.max(6000, opts.text.length * 130);
+  let timer: number | undefined;
+  try {
+    await Promise.race([
+      engine,
+      new Promise<void>((r) => {
+        timer = window.setTimeout(r, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) window.clearTimeout(timer);
+  }
+}
+
+function speakBrowser(opts: SpeakOptions): Promise<void> {
   // fallback browser: speechSynthesis — resolve saat TTS benar-benar selesai,
   // biar caller (voice loop) tidak membuka mic sambil asisten masih bersuara
-  return await new Promise<void>((resolve) => {
+  return new Promise<void>((resolve) => {
     let done = false;
     const finish = () => {
       if (done) return;
@@ -115,6 +179,10 @@ export async function speak(opts: SpeakOptions): Promise<void> {
 }
 
 export async function stopSpeaking(): Promise<void> {
+  // buang yang masih antre — kalau tidak, ucapan lama tetap muncul setelah
+  // user bilang "berhenti".
+  speakGen += 1;
+  while (speakQueue.length > 0) speakQueue.shift()!.resolve();
   const n = getNative();
   if (n) {
     await safe(() => n.stopSpeaking(), undefined as unknown as void);
@@ -129,6 +197,8 @@ export async function stopSpeaking(): Promise<void> {
 }
 
 export async function ttsIsSpeaking(): Promise<boolean> {
+  // masih ada ucapan menunggu giliran -> anggap masih bersuara, mic jangan buka
+  if (speakRunning || speakQueue.length > 0) return true;
   const n = getNative();
   if (n) {
     const r = await safe(() => n.isSpeaking(), { speaking: false });

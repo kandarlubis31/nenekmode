@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { prefs } from "../lib/prefs";
+import { getMedTimes } from "../lib/actions";
 import { setReminders } from "../lib/scheduling";
-import * as bridge from "../native/bridge";
 
 interface Props {
   onFinish: () => void;
@@ -23,6 +23,10 @@ const SUBTITLES = [
 
 const TIME_RE = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
+function hhmm(h: number, m: number): string {
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 export default function WizardScreen({ onFinish }: Props) {
   const [step, setStep] = useState(0);
   const [nenekName, setNenekName] = useState(prefs.getString("nenek_name", "Bu"));
@@ -31,9 +35,15 @@ export default function WizardScreen({ onFinish }: Props) {
   const [contactName, setContactName] = useState(prefs.getString("favorite_contact_name", ""));
   const [contactPhone, setContactPhone] = useState(prefs.getString("favorite_contact_number", ""));
   const [medOn, setMedOn] = useState(prefs.getBoolean("reminder_enabled", false));
-  const [med1, setMed1] = useState("08:00");
-  const [med2, setMed2] = useState("");
-  const [med3, setMed3] = useState("");
+  // pakai jadwal yang sudah tersimpan (kalau wizard dibuka ulang), bukan reset
+  const savedMed = getMedTimes();
+  const savedTime = (i: number, fallback = "") => {
+    const t = savedMed[i];
+    return t && t.en !== false ? hhmm(t.h, t.m) : fallback;
+  };
+  const [med1, setMed1] = useState(savedTime(0, "08:00"));
+  const [med2, setMed2] = useState(savedTime(1));
+  const [med3, setMed3] = useState(savedTime(2));
 
   const [summary, setSummary] = useState("");
 
@@ -85,20 +95,16 @@ export default function WizardScreen({ onFinish }: Props) {
         const [h, m] = s.split(":");
         return { h: parseInt(h, 10), m: parseInt(m, 10), en: true };
       });
-    if (medOn && slots.length > 0) {
-      prefs.setString("med_times", JSON.stringify(slots));
+    if (medOn) {
+      if (slots.length > 0) prefs.setString("med_times", JSON.stringify(slots));
+      // walau semua kolom jadwal kosong, pakai jadwal default yang sudah ada
+      // supaya saklar "pengingat" tidak menyala tanpa alarm apa pun.
+      setReminders();
     }
     prefs.setBoolean("is_first_time", false);
-
-    if (medOn) setReminders();
-
-    void bridge.speak({
-      text:
-        `Semua siap! ${asisten || "Aku"} siap nemenin ${nenek || "Bu"} ngobrol. ` +
-        "Silakan bicara kapan saja ya.",
-      pitch: 0.85,
-      rate: 0.75,
-    });
+    // sengaja TIDAK bersuara di sini: sapaan pembuka milik MainScreen
+    // (useAssistant). Dulu dua-duanya bicara hampir bersamaan -> suara
+    // pertama kepotong karena native TTS memakai QUEUE_FLUSH.
     onFinish();
   };
 

@@ -37,6 +37,27 @@ try {
     if (m.type() === "error") console.log("[browser-error]", m.text().slice(0, 200));
   });
 
+  // Rekam semua ucapan TTS (fallback browser) buat membuktikan antrian speak
+  // bekerja: tidak boleh ada dua ucapan yang tumpang tindih.
+  await page.evaluateOnNewDocument(() => {
+    const log = [];
+    window.__ttsLog = log;
+    const synth = window.speechSynthesis;
+    synth.speak = (u) => {
+      const entry = { text: String(u.text ?? "").slice(0, 40), start: Date.now(), end: 0 };
+      log.push(entry);
+      setTimeout(() => {
+        entry.end = Date.now();
+        try {
+          u.onend?.();
+        } catch {
+          /* abaikan */
+        }
+      }, 600);
+    };
+    synth.cancel = () => undefined;
+  });
+
   await page.goto(URL, { waitUntil: "networkidle2", timeout: 30000 });
 
   // 1. Wizard tampil (is_first_time default true)
@@ -84,6 +105,19 @@ try {
     { timeout: 60000 },
   );
   step("chat LLM -> action get_time", true);
+  // antrian TTS: tidak ada dua ucapan yang saling menimpa & tidak ada yang hilang
+  await page
+    .waitForFunction(
+      () => {
+        const l = window.__ttsLog ?? [];
+        return l.length >= 2 && l.every((e) => e.end > 0);
+      },
+      { timeout: 20000 },
+    )
+    .catch(() => undefined);
+  const tts = await page.evaluate(() => window.__ttsLog ?? []);
+  const overlaps = tts.filter((e, i) => i > 0 && e.start < tts[i - 1].end).length;
+  step(`TTS runut tanpa tumpang tindih (${tts.length} ucapan)`, tts.length >= 2 && overlaps === 0);
   await page.screenshot({ path: "smoke/3-chat.png" });
   await sleep(8000); // jeda biar kena rate limit Groq free tier
 
@@ -145,6 +179,12 @@ try {
   });
   await page.waitForSelector(".tabs", { timeout: 5000 });
   step("layar pengaturan tampil", true);
+  const voiceToggle = await page.evaluate(() =>
+    [...document.querySelectorAll(".switch-row")].some((r) =>
+      r.textContent.includes("Sapa dengan suara"),
+    ),
+  );
+  step("pengaturan suara (sapaan saat dibuka) ada", !!voiceToggle);
   await page.screenshot({ path: "smoke/4-settings.png" });
 
   // tab Teknis
