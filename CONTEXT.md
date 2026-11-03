@@ -213,6 +213,3 @@ App kedua, **install berdampingan** app Java asli (`applicationId com.example.ne
 - Temp WAV file di-cache dan dihapus setelah transkripsi
 - Chat history disimpan di SharedPreferences (max 10 entry untuk context)
 
----
-
-*Generated: 2026-08-31 · Path: java\NenekMode*
