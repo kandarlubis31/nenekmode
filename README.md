@@ -9,13 +9,13 @@ Built for grandparents who find touch interfaces hard and phone menus impossible
 ## Features
 
 - **Continuous listening** with voice activity detection, plus auto-interrupt so the assistant
-  stops talking when the user starts speaking
+ stops talking when the user starts speaking
 - **Speech in, speech out** — Groq Whisper (`whisper-large-v3`) for transcription, Android
-  `TextToSpeech` in `id-ID` (pitch `0.85`, rate `0.75`) for replies
+ `TextToSpeech` in `id-ID` (pitch `0.85`, rate `0.75`) for replies
 - **Offline wake word** via Vosk (`vosk-android`), so the phone reacts without sending audio
-  anywhere until it actually needs to
+ anywhere until it actually needs to
 - **Medicine reminders** and **daily check-in** through `AlarmScheduler` and dedicated
-  broadcast receivers
+ broadcast receivers
 - **Emergency** — one large button that sends an SMS with a GPS location to saved contacts
 - **Health log** — blood pressure records kept locally (`BloodPressureStore`)
 - **Photo backup** so a relative can help without handling the phone
@@ -66,9 +66,17 @@ be swapped between Groq's Llama variants without touching the code.
 - Speech is the primary interface; on-screen elements are large and high contrast.
 - Every failure path speaks an Indonesian sentence instead of showing an error code.
 - Reminders use `AlarmManager` receivers rather than background polling, so they survive
-  Doze.
+ Doze.
 - The API key is stored in `SharedPreferences` on the device. Anyone with physical access to
-  an unlocked phone can read it.
+ an unlocked phone can read it.
+
+---
+
+## Bahasa Indonesia
+
+**NenekMode** adalah asisten Android berbasis suara untuk pengguna lanjut usia: semua dikendalikan ucapan, target sentuh besar, TTS bahasa Indonesia dengan pitch dan tempo lambat, serta pendengaran terus-menerus agar tidak ada yang perlu ditekan.
+
+---
 
 ## License
 
