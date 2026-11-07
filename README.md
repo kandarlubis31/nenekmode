@@ -70,6 +70,14 @@ be swapped between Groq's Llama variants without touching the code.
 - The API key is stored in `SharedPreferences` on the device. Anyone with physical access to
   an unlocked phone can read it.
 
+---
+
+## Bahasa Indonesia
+
+**NenekMode** adalah asisten Android berbasis suara untuk pengguna lanjut usia: semua dikendalikan ucapan, target sentuh besar, TTS bahasa Indonesia dengan pitch dan tempo lambat, serta pendengaran terus-menerus agar tidak ada yang perlu ditekan.
+
+---
+
 ## License
 
 MIT
